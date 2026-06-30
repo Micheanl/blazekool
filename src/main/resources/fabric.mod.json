@@ -12,6 +12,12 @@
 				"value": "com.micheanl.kool.BlazeKool",
 				"adapter": "kotlin"
 			}
+		],
+		"client": [
+			{
+				"value": "com.micheanl.kool.client.BlazeKoolClient",
+				"adapter": "kotlin"
+			}
 		]
 	},
 	"depends": {
