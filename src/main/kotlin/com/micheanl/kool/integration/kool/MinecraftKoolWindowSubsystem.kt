@@ -11,7 +11,7 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil
 
-class MinecraftKoolWindowSubsystem(
+class  MinecraftKoolWindowSubsystem(
 	private val client: Minecraft
 ) : WindowSubsystem {
 	private val minecraftWindow = MinecraftKoolWindow(client)

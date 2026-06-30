@@ -1,5 +1,6 @@
 package com.micheanl.kool.api.geometry
 
+import com.micheanl.kool.render.blaze3d.BlazeKoolShaderPipeline
 import de.fabmax.kool.pipeline.BlendMode
 import de.fabmax.kool.pipeline.CullMethod
 import de.fabmax.kool.pipeline.DepthCompareOp
@@ -13,7 +14,8 @@ data class BlazeKoolRenderState(
 	val writeDepth: Boolean,
 	val lineWidth: Float,
 	val texture: Identifier?,
-	val textured: Boolean
+	val textured: Boolean,
+	val shaderPipeline: BlazeKoolShaderPipeline? = null
 ) {
 	companion object {
 		fun untextured(primitiveType: BlazeKoolPrimitiveType): BlazeKoolRenderState = BlazeKoolRenderState(
@@ -24,7 +26,8 @@ data class BlazeKoolRenderState(
 			writeDepth = true,
 			lineWidth = 1.0f,
 			texture = null,
-			textured = false
+			textured = false,
+			shaderPipeline = null
 		)
 	}
 }

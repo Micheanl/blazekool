@@ -24,6 +24,8 @@ object BlazeKoolComputeRegistry {
 	}
 
 	fun executorFor(context: BlazeKoolComputeContext): BlazeKoolComputeExecutor? {
-		return pipelineExecutors[context.pipeline.pipelineHash] ?: shaderExecutors[context.task.shader.name]
+		return pipelineExecutors[context.pipeline.pipelineHash]
+			?: shaderExecutors[context.task.shader.name]
+			?: BlazeKoolBuiltInComputeExecutors.executorFor(context)
 	}
 }

@@ -25,6 +25,7 @@ class MinecraftKoolContext(
 
 	init {
 		KoolSystemBridge.onContextCreated(this)
+		MinecraftKoolControllerBridge.initialize()
 	}
 
 	override fun openUrl(url: String, sameWindow: Boolean) {
@@ -62,6 +63,8 @@ class MinecraftKoolContext(
 		for (index in onShutdown.indices) {
 			onShutdown[index](this)
 		}
+		window.shutdown()
+		MinecraftKoolControllerBridge.shutdown()
 		backend.cleanup(this)
 	}
 

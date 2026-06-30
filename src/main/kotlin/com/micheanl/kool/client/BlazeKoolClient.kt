@@ -10,5 +10,6 @@ object BlazeKoolClient : ClientModInitializer {
 		ClientLifecycleEvents.CLIENT_STARTED.register(BlazeKoolEngine::start)
 		ClientLifecycleEvents.CLIENT_STOPPING.register(BlazeKoolEngine::stop)
 		LevelRenderEvents.COLLECT_SUBMITS.register(BlazeKoolEngine::collectSubmits)
+		LevelRenderEvents.AFTER_SOLID_FEATURES.register(BlazeKoolEngine::renderDirect)
 	}
 }

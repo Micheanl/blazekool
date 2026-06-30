@@ -23,13 +23,13 @@ class BlazeKoolPrimitiveGeometry(
 	private fun emitVertex(pose: PoseStack.Pose, buffer: VertexConsumer, vertex: BlazeKoolVertex) {
 		val consumer = buffer.addVertex(pose, vertex.x, vertex.y, vertex.z)
 			.setColor(vertex.color)
-		if (state.textured) {
+		if (state.textured || state.shaderPipeline != null) {
 			consumer.setUv(vertex.u, vertex.v)
 		}
-		if (state.primitiveType == BlazeKoolPrimitiveType.LINES || state.primitiveType == BlazeKoolPrimitiveType.POINTS) {
+		if (state.shaderPipeline == null && (state.primitiveType == BlazeKoolPrimitiveType.LINES || state.primitiveType == BlazeKoolPrimitiveType.POINTS)) {
 			consumer.setLineWidth(state.lineWidth)
 		}
-		if (state.primitiveType != BlazeKoolPrimitiveType.POINTS) {
+		if (state.shaderPipeline != null || state.primitiveType != BlazeKoolPrimitiveType.POINTS) {
 			consumer.setNormal(pose, vertex.nx, vertex.ny, vertex.nz)
 		}
 	}

@@ -49,6 +49,10 @@ object BlazeKoolEngine {
 		renderBridge.collectSubmits(context)
 	}
 
+	fun renderDirect(context: LevelRenderContext) {
+		renderBridge.renderDirect(context)
+	}
+
 	fun addGeometry(geometry: BlazeKoolGeometry) {
 		renderBridge.add(geometry)
 	}

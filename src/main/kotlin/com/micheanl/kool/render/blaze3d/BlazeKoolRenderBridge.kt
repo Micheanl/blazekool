@@ -9,6 +9,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 class BlazeKoolRenderBridge {
 	private val geometries = CopyOnWriteArrayList<BlazeKoolGeometry>()
 	private val koolGeometries = CopyOnWriteArrayList<BlazeKoolGeometry>()
+	private val directDraws = CopyOnWriteArrayList<BlazeKoolDirectDrawCommand>()
+	private val directRenderer = BlazeKoolDirectDrawRenderer()
 	private var width = 1
 	private var height = 1
 
@@ -28,6 +30,7 @@ class BlazeKoolRenderBridge {
 	fun clear() {
 		geometries.clear()
 		koolGeometries.clear()
+		clearDirectDraws()
 	}
 
 	fun replaceKoolGeometry(nextGeometry: List<BlazeKoolGeometry>) {
@@ -35,8 +38,14 @@ class BlazeKoolRenderBridge {
 		koolGeometries.addAll(nextGeometry)
 	}
 
+	fun replaceDirectDraws(nextDraws: List<BlazeKoolDirectDrawCommand>) {
+		directDraws.clear()
+		directDraws.addAll(nextDraws)
+	}
+
 	fun clearKoolGeometry() {
 		koolGeometries.clear()
+		clearDirectDraws()
 	}
 
 	fun collectSubmits(context: LevelRenderContext) {
@@ -54,5 +63,13 @@ class BlazeKoolRenderBridge {
 			collector.submitCustomGeometry(poseStack, geometry.renderType, geometry::submit)
 			index++
 		}
+	}
+
+	fun renderDirect(context: LevelRenderContext) {
+		directRenderer.render(context, directDraws)
+	}
+
+	private fun clearDirectDraws() {
+		directDraws.clear()
 	}
 }
