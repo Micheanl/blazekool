@@ -11,11 +11,10 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil
 
-class  MinecraftKoolWindowSubsystem(
-	private val client: Minecraft
+class MinecraftKoolWindowSubsystem(
+	private val client: Minecraft,
+	private val minecraftWindow: MinecraftKoolWindow
 ) : WindowSubsystem {
-	private val minecraftWindow = MinecraftKoolWindow(client)
-
 	override val isCloseRequested: Boolean
 		get() = client.window.shouldClose() || !client.isRunning
 

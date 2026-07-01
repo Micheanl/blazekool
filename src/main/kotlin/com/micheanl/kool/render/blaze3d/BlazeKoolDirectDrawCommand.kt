@@ -16,6 +16,9 @@ class BlazeKoolDirectDrawCommand(
 	val indexBuffer: GpuBuffer,
 	val indexType: IndexType,
 	val indexCount: Int,
+	val centerX: Float,
+	val centerY: Float,
+	val centerZ: Float,
 	uniformBindings: List<UniformBinding>,
 	textureBindings: List<TextureBinding>,
 	val bindGroupLayout: BindGroupLayout
@@ -33,6 +36,13 @@ class BlazeKoolDirectDrawCommand(
 
 	fun requiresSampler(name: String): Boolean {
 		return bindGroupLayout.samplers.contains(name)
+	}
+
+	fun distanceSquaredTo(x: Double, y: Double, z: Double): Double {
+		val dx = centerX - x
+		val dy = centerY - y
+		val dz = centerZ - z
+		return dx * dx + dy * dy + dz * dz
 	}
 
 	override fun close() {

@@ -110,14 +110,14 @@ class BlazeKoolDirectDrawCollector(
 		bindGroupLayout: BindGroupLayout,
 		firstTexture: TextureBinding
 	): BlazeKoolDirectDrawCommand {
-		val vertexBufferData = vertexBuffer(command)
+		val vertexData = vertexBuffer(command)
 		val indexCount = directIndexCount(command)
 		val indexBufferData = indexBuffer(indexCount)
 		val device = RenderSystem.getDevice()
 		val vertexBuffer = device.createBuffer(
 			{ "BlazeKool Direct Vertices" },
 			GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_COPY_DST,
-			vertexBufferData
+			vertexData.bytes
 		)
 		val indexBuffer = device.createBuffer(
 			{ "BlazeKool Direct Indices" },
@@ -131,16 +131,20 @@ class BlazeKoolDirectDrawCollector(
 			indexBuffer = indexBuffer,
 			indexType = IndexType.INT,
 			indexCount = indexCount,
+			centerX = vertexData.centerX,
+			centerY = vertexData.centerY,
+			centerZ = vertexData.centerZ,
 			uniformBindings = uniformBindings(bindings),
 			textureBindings = textureBindings(firstTexture),
 			bindGroupLayout = bindGroupLayout
 		)
 	}
 
-	private fun vertexBuffer(command: DrawCommand): ByteBuffer {
+	private fun vertexBuffer(command: DrawCommand): VertexBufferData {
 		val geometry = command.vertexData
 		val instanceCount = command.instanceData?.numInstances?.coerceAtLeast(1) ?: 1
 		val data = ByteBuffer.allocateDirect(directVertexCount(command) * instanceCount * DIRECT_VERTEX_SIZE).order(ByteOrder.nativeOrder())
+		val bounds = MutableBounds()
 		val modelMatrix = MutableMat4f()
 		val transformedPosition = MutableVec3f()
 		val transformedNormal = MutableVec3f()
@@ -150,11 +154,16 @@ class BlazeKoolDirectDrawCollector(
 		while (instanceIndex < instanceCount) {
 			val transform = instanceAccessor?.modelMatrix(command.modelMatF, instanceIndex, modelMatrix) ?: command.modelMatF
 			val instanceColor = instanceAccessor?.color(instanceIndex)
-			appendVertices(command, transform, instanceColor, materialColor, data, transformedPosition, transformedNormal)
+			appendVertices(command, transform, instanceColor, materialColor, data, bounds, transformedPosition, transformedNormal)
 			instanceIndex++
 		}
 		data.flip()
-		return data
+		return VertexBufferData(
+			bytes = data,
+			centerX = bounds.centerX(),
+			centerY = bounds.centerY(),
+			centerZ = bounds.centerZ()
+		)
 	}
 
 	private fun appendVertices(
@@ -163,16 +172,17 @@ class BlazeKoolDirectDrawCollector(
 		instanceColor: MutableVec4f?,
 		materialColor: MutableVec4f,
 		data: ByteBuffer,
+		bounds: MutableBounds,
 		transformedPosition: MutableVec3f,
 		transformedNormal: MutableVec3f
 	) {
 		val geometry = command.vertexData
 		when (geometry.primitiveType) {
-			PrimitiveType.TRIANGLE_STRIP -> appendTriangleStripVertices(command, transform, instanceColor, materialColor, data, transformedPosition, transformedNormal)
+			PrimitiveType.TRIANGLE_STRIP -> appendTriangleStripVertices(command, transform, instanceColor, materialColor, data, bounds, transformedPosition, transformedNormal)
 			else -> {
 				var index = 0
 				while (index < geometry.numIndices) {
-					appendIndexedVertex(command, transform, instanceColor, materialColor, data, transformedPosition, transformedNormal, geometry.indices[index])
+					appendIndexedVertex(command, transform, instanceColor, materialColor, data, bounds, transformedPosition, transformedNormal, geometry.indices[index])
 					index++
 				}
 			}
@@ -185,6 +195,7 @@ class BlazeKoolDirectDrawCollector(
 		instanceColor: MutableVec4f?,
 		materialColor: MutableVec4f,
 		data: ByteBuffer,
+		bounds: MutableBounds,
 		transformedPosition: MutableVec3f,
 		transformedNormal: MutableVec3f
 	) {
@@ -195,13 +206,13 @@ class BlazeKoolDirectDrawCollector(
 			val second = geometry.indices[index - 1]
 			val third = geometry.indices[index]
 			if (index and 1 == 0) {
-				appendIndexedVertex(command, transform, instanceColor, materialColor, data, transformedPosition, transformedNormal, first)
-				appendIndexedVertex(command, transform, instanceColor, materialColor, data, transformedPosition, transformedNormal, second)
-				appendIndexedVertex(command, transform, instanceColor, materialColor, data, transformedPosition, transformedNormal, third)
+				appendIndexedVertex(command, transform, instanceColor, materialColor, data, bounds, transformedPosition, transformedNormal, first)
+				appendIndexedVertex(command, transform, instanceColor, materialColor, data, bounds, transformedPosition, transformedNormal, second)
+				appendIndexedVertex(command, transform, instanceColor, materialColor, data, bounds, transformedPosition, transformedNormal, third)
 			} else {
-				appendIndexedVertex(command, transform, instanceColor, materialColor, data, transformedPosition, transformedNormal, second)
-				appendIndexedVertex(command, transform, instanceColor, materialColor, data, transformedPosition, transformedNormal, first)
-				appendIndexedVertex(command, transform, instanceColor, materialColor, data, transformedPosition, transformedNormal, third)
+				appendIndexedVertex(command, transform, instanceColor, materialColor, data, bounds, transformedPosition, transformedNormal, second)
+				appendIndexedVertex(command, transform, instanceColor, materialColor, data, bounds, transformedPosition, transformedNormal, first)
+				appendIndexedVertex(command, transform, instanceColor, materialColor, data, bounds, transformedPosition, transformedNormal, third)
 			}
 			index++
 		}
@@ -213,6 +224,7 @@ class BlazeKoolDirectDrawCollector(
 		instanceColor: MutableVec4f?,
 		materialColor: MutableVec4f,
 		data: ByteBuffer,
+		bounds: MutableBounds,
 		transformedPosition: MutableVec3f,
 		transformedNormal: MutableVec3f,
 		vertexIndex: Int
@@ -224,6 +236,7 @@ class BlazeKoolDirectDrawCollector(
 		val color = geometry.vertexIt.color
 		val texCoord = geometry.vertexIt.texCoord
 		transform.transform(position, 1.0f, transformedPosition)
+		bounds.include(transformedPosition)
 		transform.transform(normal, 0.0f, transformedNormal)
 		writeVertex(
 			data = data,
@@ -568,6 +581,47 @@ class BlazeKoolDirectDrawCollector(
 		val slice: BlazeKoolTextureSlice,
 		val sampler: SamplerSettings
 	)
+
+	private class VertexBufferData(
+		val bytes: ByteBuffer,
+		val centerX: Float,
+		val centerY: Float,
+		val centerZ: Float
+	)
+
+	private class MutableBounds {
+		private var minX = Float.POSITIVE_INFINITY
+		private var minY = Float.POSITIVE_INFINITY
+		private var minZ = Float.POSITIVE_INFINITY
+		private var maxX = Float.NEGATIVE_INFINITY
+		private var maxY = Float.NEGATIVE_INFINITY
+		private var maxZ = Float.NEGATIVE_INFINITY
+
+		fun include(position: MutableVec3f) {
+			minX = minOf(minX, position.x)
+			minY = minOf(minY, position.y)
+			minZ = minOf(minZ, position.z)
+			maxX = maxOf(maxX, position.x)
+			maxY = maxOf(maxY, position.y)
+			maxZ = maxOf(maxZ, position.z)
+		}
+
+		fun centerX(): Float {
+			return center(minX, maxX)
+		}
+
+		fun centerY(): Float {
+			return center(minY, maxY)
+		}
+
+		fun centerZ(): Float {
+			return center(minZ, maxZ)
+		}
+
+		private fun center(min: Float, max: Float): Float {
+			return if (min.isFinite() && max.isFinite()) (min + max) * 0.5f else 0.0f
+		}
+	}
 
 	private class InstanceDataAccessor(
 		private val instances: MeshInstanceList<*>,

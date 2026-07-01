@@ -1,15 +1,20 @@
 package com.micheanl.kool.render.blaze3d
 
 import com.micheanl.kool.api.geometry.BlazeKoolGeometry
+import com.micheanl.kool.api.geometry.BlazeKoolPrimitiveGeometry
 import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import de.fabmax.kool.pipeline.BlendMode
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
+import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.SubmitNodeCollector
 import java.util.concurrent.CopyOnWriteArrayList
 
 class BlazeKoolRenderBridge {
 	private val geometries = CopyOnWriteArrayList<BlazeKoolGeometry>()
 	private val koolGeometries = CopyOnWriteArrayList<BlazeKoolGeometry>()
-	private val directDraws = CopyOnWriteArrayList<BlazeKoolDirectDrawCommand>()
+	private val solidDirectDraws = CopyOnWriteArrayList<BlazeKoolDirectDrawCommand>()
+	private val translucentDirectDraws = CopyOnWriteArrayList<BlazeKoolDirectDrawCommand>()
 	private val directRenderer = BlazeKoolDirectDrawRenderer()
 	private var width = 1
 	private var height = 1
@@ -39,8 +44,18 @@ class BlazeKoolRenderBridge {
 	}
 
 	fun replaceDirectDraws(nextDraws: List<BlazeKoolDirectDrawCommand>) {
-		directDraws.clear()
-		directDraws.addAll(nextDraws)
+		solidDirectDraws.clear()
+		translucentDirectDraws.clear()
+		var index = 0
+		while (index < nextDraws.size) {
+			val draw = nextDraws[index]
+			if (draw.renderState.blendMode == BlendMode.DISABLED) {
+				solidDirectDraws.add(draw)
+			} else {
+				translucentDirectDraws.add(draw)
+			}
+			index++
+		}
 	}
 
 	fun clearKoolGeometry() {
@@ -65,11 +80,31 @@ class BlazeKoolRenderBridge {
 		}
 	}
 
-	fun renderDirect(context: LevelRenderContext) {
-		directRenderer.render(context, directDraws)
+	fun renderSolidDirect(context: LevelRenderContext) {
+		directRenderer.render(context, solidDirectDraws)
+	}
+
+	fun renderTranslucentDirect(context: LevelRenderContext) {
+		val cameraPosition = Minecraft.getInstance().gameRenderer.mainCamera().position()
+		val sortedDraws = translucentDirectDraws.sortedByDescending { draw ->
+			draw.distanceSquaredTo(cameraPosition.x, cameraPosition.y, cameraPosition.z)
+		}
+		directRenderer.render(context, sortedDraws)
+	}
+
+	fun extractGui(graphics: GuiGraphicsExtractor) {
+		var index = 0
+		while (index < koolGeometries.size) {
+			val geometry = koolGeometries[index]
+			if (geometry is BlazeKoolPrimitiveGeometry && BlazeKoolGuiGeometryRenderState.accepts(geometry)) {
+				graphics.guiRenderState.addGuiElement(BlazeKoolGuiGeometryRenderState(geometry))
+			}
+			index++
+		}
 	}
 
 	private fun clearDirectDraws() {
-		directDraws.clear()
+		solidDirectDraws.clear()
+		translucentDirectDraws.clear()
 	}
 }

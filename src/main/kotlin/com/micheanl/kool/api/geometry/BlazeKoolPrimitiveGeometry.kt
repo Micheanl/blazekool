@@ -6,8 +6,8 @@ import com.mojang.blaze3d.vertex.VertexConsumer
 import net.minecraft.client.renderer.rendertype.RenderType
 
 class BlazeKoolPrimitiveGeometry(
-	private val vertices: List<BlazeKoolVertex>,
-	private val state: BlazeKoolRenderState
+	val vertices: List<BlazeKoolVertex>,
+	val state: BlazeKoolRenderState
 ) : BlazeKoolGeometry {
 	override val renderType: RenderType = BlazeKoolRenderTypes.renderType(state)
 

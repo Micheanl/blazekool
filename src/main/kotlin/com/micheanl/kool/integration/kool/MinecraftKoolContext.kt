@@ -15,11 +15,12 @@ import java.net.URI
 class MinecraftKoolContext(
 	private val client: Minecraft,
 	private val renderBridge: BlazeKoolRenderBridge,
+	private val minecraftWindow: MinecraftKoolWindow = MinecraftKoolWindow(client),
 	@Suppress("UNUSED_PARAMETER")
-	private val initialized: Unit = initializeKoolSystem(client)
+	private val initialized: Unit = initializeKoolSystem(client, minecraftWindow)
 ) : KoolContext(), KoolSceneRegistry {
 	override val backend: Blaze3DKoolBackend = Blaze3DKoolBackend(renderBridge)
-	override val window: MinecraftKoolWindow = MinecraftKoolWindow(client)
+	override val window: MinecraftKoolWindow = minecraftWindow
 
 	private val sysInfos = ArrayList<String>(4)
 
@@ -73,9 +74,9 @@ class MinecraftKoolContext(
 	}
 
 	companion object {
-		private fun initializeKoolSystem(client: Minecraft) {
+		private fun initializeKoolSystem(client: Minecraft, window: MinecraftKoolWindow) {
 			if (!KoolSystem.isInitialized) {
-				KoolSystem.initialize(MinecraftKoolConfig.create(client))
+				KoolSystem.initialize(MinecraftKoolConfig.create(client, window))
 			}
 		}
 	}

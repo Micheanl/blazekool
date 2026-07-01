@@ -18,6 +18,12 @@
 				"value": "com.micheanl.kool.client.BlazeKoolClient",
 				"adapter": "kotlin"
 			}
+		],
+		"modmenu": [
+			{
+				"value": "com.micheanl.kool.client.modmenu.BlazeKoolModMenuIntegration",
+				"adapter": "kotlin"
+			}
 		]
 	},
 	"mixins": [

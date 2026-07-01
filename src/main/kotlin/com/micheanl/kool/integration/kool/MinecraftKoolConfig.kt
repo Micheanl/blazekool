@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft
 import java.nio.file.Files
 
 object MinecraftKoolConfig {
-	fun create(client: Minecraft): KoolConfigJvm {
+	fun create(client: Minecraft, window: MinecraftKoolWindow): KoolConfigJvm {
 		val baseDir = client.gameDirectory.toPath().resolve("blazekool")
 		val storageDir = baseDir.resolve("storage")
 		val httpCacheDir = baseDir.resolve("http-cache")
@@ -19,7 +19,7 @@ object MinecraftKoolConfig {
 			numSamples = 1,
 			storageDir = storageDir.toString(),
 			httpCacheDir = httpCacheDir.toString(),
-			windowSubsystem = MinecraftKoolWindowSubsystem(client),
+			windowSubsystem = MinecraftKoolWindowSubsystem(client, window),
 			windowTitle = "BlazeKool",
 			windowSize = Vec2i(client.window.width, client.window.height),
 			asyncSceneUpdate = false

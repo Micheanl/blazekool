@@ -19,11 +19,23 @@ dependencies {
 	implementation("net.fabricmc.fabric-api:fabric-api:${providers.gradleProperty("fabric_api_version").get()}")
 	implementation("net.fabricmc:fabric-language-kotlin:${providers.gradleProperty("fabric_kotlin_version").get()}")
 	implementation(include("de.fabmax.kool:kool-core:0.19.0")!!)
+	implementation(include("de.fabmax.kool:kool-physics:0.19.0")!!)
+	implementation(include("de.fabmax.kool:kool-physics-2d:0.19.0")!!)
+	compileOnly(files("libs/modmenu.jar"))
 	include("org.jetbrains.kotlinx:atomicfu:0.29.0")
+	include("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+	include("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
 	include("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 	include("com.github.weisj:jsvg:2.0.0")
 	include("org.lwjglx:lwjgl3-awt:0.2.3") {
 		exclude(group = "org.lwjgl")
+	}
+}
+
+sourceSets {
+	main {
+		kotlin.srcDir("src/koolDemoVendor/kotlin")
+		resources.srcDir("src/koolDemoVendor/resources")
 	}
 }
 
@@ -43,6 +55,8 @@ tasks.withType<JavaCompile>().configureEach {
 kotlin {
 	compilerOptions {
 		jvmTarget = JvmTarget.JVM_25
+		freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+		freeCompilerArgs.add("-Xcontext-parameters")
 	}
 }
 
